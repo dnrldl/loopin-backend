@@ -13,7 +13,6 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -25,12 +24,12 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        ApiErrorResponse body = ApiErrorResponse.from(ErrorCode.ACCESS_DENIED);
+        ApiErrorResponse errorResponse = ApiErrorResponse.from(ErrorCode.ACCESS_DENIED);
 
         response.setStatus(ErrorCode.ACCESS_DENIED.getStatus().value()); // 403
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setCharacterEncoding("UTF-8");
 
-        objectMapper.writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
