@@ -1,8 +1,5 @@
 package com.loopin.loopinbackend.global.aop;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -18,13 +15,6 @@ import java.util.stream.IntStream;
 @Component
 @Slf4j
 public class LoggingAspect {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    public LoggingAspect() {
-        objectMapper.registerModule(new JavaTimeModule())
-                .enable(SerializationFeature.INDENT_OUTPUT) // 들여쓰기, 줄바꿈
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 배열이 아닌 문자열로 반환
-    }
 
     @Pointcut("execution(* com.loopin.loopinbackend.domain..controller..*(..))")
     public void controllerMethods() {}
@@ -61,8 +51,7 @@ public class LoggingAspect {
         StringBuilder sb = new StringBuilder();
         IntStream.range(0, paramNames.length).forEach(i -> {
             try {
-                String json = objectMapper.writeValueAsString(args[i]);
-                sb.append(paramNames[i]).append("=").append(json);
+                sb.append(paramNames[i]).append("=").append(args[i]);
                 if (i < paramNames.length - 1) sb.append(", ");
             } catch (Exception e) {
                 sb.append(paramNames[i]).append("=<?>");
@@ -76,10 +65,10 @@ public class LoggingAspect {
         try {
             String methodName = joinPoint.getSignature().getDeclaringTypeName()
                     + "." + joinPoint.getSignature().getName();
-            String json = objectMapper.writeValueAsString(result);
-            log.info("✅ [RESPONSE] {} => {}", methodName, json);
+
+            log.info("[RESPONSE] {} => {}", methodName, result.toString());
         } catch (Exception e) {
-            log.warn("⚠️ [RESPONSE LOGGING ERROR] {}", e.getMessage());
+            log.warn("[RESPONSE LOGGING ERROR] {}", e.getMessage());
         }
     }
 
