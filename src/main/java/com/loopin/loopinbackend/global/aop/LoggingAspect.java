@@ -34,12 +34,12 @@ public class LoggingAspect {
         log.info("[REQUEST] {}({})", methodName, args);
     }
 
-    @Before("businessMethods()")
-    public void logBusinessMethod(JoinPoint joinPoint) {
-        String methodName = getMethodName(joinPoint);
-        String args = getArguments(joinPoint);
-        log.info("[METHOD] {}({})", methodName, args);
-    }
+//    @Before("businessMethods()")
+//    public void logBusinessMethod(JoinPoint joinPoint) {
+//        String methodName = getMethodName(joinPoint);
+//        String args = getArguments(joinPoint);
+//        log.info("[METHOD] {}({})", methodName, args);
+//    }
 
     private String getMethodName(JoinPoint joinPoint) {
         return joinPoint.getSignature().getDeclaringTypeName()
