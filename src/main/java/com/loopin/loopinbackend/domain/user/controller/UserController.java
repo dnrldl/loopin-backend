@@ -41,7 +41,6 @@ public class UserController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "회원가입 요청 DTO", required = true)
             @RequestBody UserRegisterRequest request
     ) {
-        System.out.println("request.toString() = " + request.toString());
         String response = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiSuccessResponse.of(response));

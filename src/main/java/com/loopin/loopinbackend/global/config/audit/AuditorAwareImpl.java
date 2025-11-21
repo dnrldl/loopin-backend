@@ -12,7 +12,6 @@ public class AuditorAwareImpl implements AuditorAware<Long> {
     @Override
     @NonNull
     public Optional<Long> getCurrentAuditor() {
-        System.out.println("Auditor called");
         return Optional.ofNullable(SecurityUtils.getCurrentUser().getId());
     }
 }

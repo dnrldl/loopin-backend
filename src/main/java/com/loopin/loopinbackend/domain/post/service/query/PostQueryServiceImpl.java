@@ -29,7 +29,7 @@ public class PostQueryServiceImpl implements PostQueryService {
         String redisKey = "post:" + postId + ":likes";
         Boolean isLiked = redisTemplate.opsForSet().isMember(redisKey, userId);
 
-        PostDetailResponse response = postQueryRepository.findPostById(postId);
+        PostDetailResponse response = postQueryRepository.findPostById(postId, userId);
 
         if (Boolean.TRUE.equals(isLiked)) response.setIsLiked(true);
 

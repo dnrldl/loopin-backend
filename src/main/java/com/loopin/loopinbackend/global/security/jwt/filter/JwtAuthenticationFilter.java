@@ -1,10 +1,11 @@
 package com.loopin.loopinbackend.global.security.jwt.filter;
 
 import com.loopin.loopinbackend.domain.auth.exception.BlacklistTokenException;
-import com.loopin.loopinbackend.global.security.jwt.provider.JwtProvider;
+import com.loopin.loopinbackend.domain.auth.exception.InvalidJwtException;
 import com.loopin.loopinbackend.domain.auth.model.CustomUserDetails;
-import com.loopin.loopinbackend.global.security.util.SecurityUtils;
 import com.loopin.loopinbackend.domain.auth.service.CustomUserDetailsService;
+import com.loopin.loopinbackend.global.security.jwt.provider.JwtProvider;
+import com.loopin.loopinbackend.global.security.util.SecurityUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,27 +37,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = SecurityUtils.resolveToken(request);
 
         if (token != null) {
-            if (redisTemplate.hasKey("blacklist:" + token)) {
-                // 블랙리스트 토큰 → 인증 실패
-                throw new BlacklistTokenException();
+            if (redisTemplate.hasKey("blacklist:" + token)) throw new BlacklistTokenException();
+            if (!jwtProvider.isValidToken(token)) {
+
+
+                throw new InvalidJwtException();
             }
 
-            if (jwtProvider.validateToken(token)) {
-                String email = jwtProvider.extractUsername(token);
-                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
+            String email = jwtProvider.extractUsername(token);
+            CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                // 토큰 유효성 실패 → 인증 실패
-                throw new IllegalArgumentException("Invalid JWT token");
-            }
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
     }
-
 }

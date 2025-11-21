@@ -7,6 +7,7 @@ import com.loopin.loopinbackend.domain.auth.model.CustomUserDetails;
 import com.loopin.loopinbackend.domain.user.enums.Role;
 import com.loopin.loopinbackend.global.error.BaseException;
 import com.loopin.loopinbackend.global.error.ErrorCode;
+import com.loopin.loopinbackend.global.security.jwt.enums.TokenStatus;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -43,7 +44,7 @@ public class JwtProvider {
      * RefreshToken으로 AccessToken 재발급
      */
     public String refreshAccessToken(String refreshToken) {
-        if (!validateToken(refreshToken)) return null;
+        if (!isValidToken(refreshToken)) return null;
 
         Long userId = extractUserId(refreshToken);
         String username = extractUsername(refreshToken);
@@ -112,22 +113,28 @@ public class JwtProvider {
     /**
      * 토큰 유효성 검사
      */
-    public boolean validateToken(String token) {
-        if (token == null || token.isEmpty()) throw new EmptyTokenException();
+    public boolean isValidToken(String token) {
+        return getTokenStatus(token) == TokenStatus.VALID;
+    }
+
+    public TokenStatus getTokenStatus(String token) {
+        if (token == null || token.isEmpty()) return TokenStatus.EMPTY;
 
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSignKey())
                     .build()
                     .parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException e) {
-            throw new ExpiredCustomJwtException();
-        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
-            System.out.println("asddasddasasd");
-            throw new InvalidJwtException();
-        } catch (Exception e) {
-            throw new BaseException(ErrorCode.JWT_VALIDATION_ERROR);
+            return TokenStatus.VALID;
+        }
+        catch (ExpiredJwtException e) {
+            return TokenStatus.EXPIRED;
+        }
+        catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            return TokenStatus.INVALID;
+        }
+        catch (Exception e) {
+            return TokenStatus.ERROR;
         }
     }
 

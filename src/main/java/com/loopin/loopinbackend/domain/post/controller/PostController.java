@@ -61,15 +61,13 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "조회 실패", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
     })
     @GetMapping
-    public ResponseEntity<ApiSuccessResponse<PageResponse<PostDetailResponse>>> getPosts(
+    public ApiSuccessResponse<PageResponse<PostDetailResponse>> getPosts(
             PostSearchCond condition,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthUserId Long userId
     ) {
-        Long userId = null;
-        if (userDetails != null) userId = userDetails.getUserId();
         PageResponse<PostDetailResponse> responses = postQueryService.getPosts(condition, userId);
 
-        return ResponseEntity.ok(ApiSuccessResponse.of(responses));
+        return ApiSuccessResponse.of(responses);
     }
 
     // private

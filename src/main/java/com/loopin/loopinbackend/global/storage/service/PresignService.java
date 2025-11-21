@@ -59,17 +59,14 @@ public class PresignService {
 
         // 2) 경로 정규화
         String prefix = normalizePrefix(pathPrefix);
-        System.out.println("prefix = " + prefix);
 
         // 3) 파일별 presign
         List<PresignDtos.PresignUrlDetail> result = new ArrayList<>(files.size());
         for (PresignDtos.FileSpec f : files) {
             String original = requireNonBlank(f.originalFileName(), "원본 파일명이 비어 있습니다.");
-            System.out.println("original = " + original);
 
             // 3-1) 확장자/용량 검증
             String ext = extractExt(original);
-            System.out.println("ext = " + ext);
             validateExtension(ext);
             if (f.sizeBytes() != null && f.sizeBytes() > MAX_BYTES_PER_FILE) {
                 throw new IllegalArgumentException("파일(" + original + ")이 최대 용량(" + readableSize(MAX_BYTES_PER_FILE) + ")을 초과했습니다.");
@@ -77,18 +74,13 @@ public class PresignService {
 
             // 3-2) 서버가 강제할 Content-Type 결정
             String contentType = EXT_TO_MIME.getOrDefault(ext, "application/octet-stream");
-            System.out.println("contentType = " + contentType);
 
             // 3-3) 새 파일명 생성
             String newFileName = UUID.randomUUID() + ext;
             String key = prefix + newFileName;
 
-            System.out.println("key = " + key);
-            System.out.println("newFileName = " + newFileName);
-
             // 3-4) 만료 시간
             Date expiration = Date.from(Instant.ofEpochMilli(System.currentTimeMillis() + EXPIRE_MILLIS));
-            System.out.println("expiration = " + expiration);
 
             // 3-5) presigned 생성 (Content-Type 고정)
             GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, key)
@@ -101,11 +93,7 @@ public class PresignService {
             // 필요 시 key에 원본명 해시 포함도 고려.
             URL presignedUrl = amazonS3.generatePresignedUrl(req);
 
-            System.out.println("presignedUrl = " + presignedUrl);
-
             String fileUrl = cloudFrontDomain + "/" + key;
-
-            System.out.println("fileUrl = " + fileUrl);
 
             result.add(PresignDtos.PresignUrlDetail.builder()
                     .key(key)

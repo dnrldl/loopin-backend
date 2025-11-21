@@ -4,15 +4,11 @@ import com.loopin.loopinbackend.domain.auth.dto.LoginResponse;
 import com.loopin.loopinbackend.domain.auth.dto.TokensDto;
 import com.loopin.loopinbackend.domain.auth.dto.request.UserLoginRequest;
 import com.loopin.loopinbackend.domain.auth.dto.response.UserLoginResponse;
-import com.loopin.loopinbackend.domain.auth.exception.InvalidJwtException;
 import com.loopin.loopinbackend.domain.auth.exception.UnauthorizedAccessException;
-import com.loopin.loopinbackend.domain.auth.service.AuthServiceImpl;
-import com.loopin.loopinbackend.domain.user.exception.UserNotFoundException;
+import com.loopin.loopinbackend.domain.auth.service.AuthService;
 import com.loopin.loopinbackend.global.response.ApiErrorResponse;
 import com.loopin.loopinbackend.global.response.ApiSuccessResponse;
 import com.loopin.loopinbackend.global.security.annotation.AuthUserId;
-import com.loopin.loopinbackend.global.security.annotation.PublicApi;
-import com.loopin.loopinbackend.global.security.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,19 +22,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 @Tag(name = "Auth", description = "인증 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final AuthServiceImpl authService;
+    private final AuthService authService;
 
     @Operation(summary = "로그인",
             description = "사용자가 이메일, 비밀번호를 입력하여 로그인합니다.")
@@ -47,7 +40,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "입력값 검증 실패", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiSuccessResponse<UserLoginResponse>> login(
+    public ApiSuccessResponse<UserLoginResponse> login(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "로그인 요청 DTO", required = true)
             @RequestBody UserLoginRequest userLoginRequest,
             HttpServletResponse response) {
@@ -62,7 +55,7 @@ public class AuthController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(ApiSuccessResponse.of(result.getUserLoginResponse()));
+        return ApiSuccessResponse.of(result.getUserLoginResponse());
     }
 
     @Operation(summary = "엑세스 토큰 재발급",
@@ -72,8 +65,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "토큰 재발급 실패", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
     })
     @PostMapping("/refresh")
-    public ResponseEntity<ApiSuccessResponse<String>> refresh(@CookieValue(value = "refreshToken", defaultValue = "") String refreshToken, HttpServletResponse response) {
-        System.out.println("refreshToken = " + refreshToken);
+    public ApiSuccessResponse<String> refresh(@CookieValue(value = "refreshToken", defaultValue = "") String refreshToken, HttpServletResponse response) {
         if (refreshToken.isBlank()) throw new IllegalArgumentException();
         TokensDto tokens = authService.refreshToken(refreshToken);
 
@@ -87,7 +79,7 @@ public class AuthController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(ApiSuccessResponse.of(tokens.getAccessToken()));
+        return ApiSuccessResponse.of(tokens.getAccessToken());
     }
 
     // private

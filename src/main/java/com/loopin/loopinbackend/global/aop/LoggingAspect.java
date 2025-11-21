@@ -1,5 +1,7 @@
 package com.loopin.loopinbackend.global.aop;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -14,7 +16,10 @@ import java.util.stream.IntStream;
 @Aspect
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class LoggingAspect {
+
+    private final ObjectMapper objectMapper;
 
     @Pointcut("execution(* com.loopin.loopinbackend.domain..controller..*(..))")
     public void controllerMethods() {}
@@ -66,7 +71,11 @@ public class LoggingAspect {
             String methodName = joinPoint.getSignature().getDeclaringTypeName()
                     + "." + joinPoint.getSignature().getName();
 
-            log.info("[RESPONSE] {} => {}", methodName, result.toString());
+            String json = objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(result);
+
+            log.info("[RESPONSE] {} => {}", methodName, json);
         } catch (Exception e) {
             log.warn("[RESPONSE LOGGING ERROR] {}", e.getMessage());
         }
