@@ -1,18 +1,17 @@
 services:
-  # 1. PostgreSQL 데이터베이스 서비스
+  # 1. PostgreSQL
   postgres:
-    image: postgres:16-alpine # PostgreSQL의 최신 안정 버전 (alpine은 경량 이미지)
+    image: postgres:16-alpine
     container_name: postgres_compose
     restart: always
     environment:
-      # PostgreSQL 환경 변수 (MySQL과 다름)
       POSTGRES_DB: loopin
       POSTGRES_USER: loopin_user
       POSTGRES_PASSWORD: 1234
     ports:
-      - "5432:5432" # PostgreSQL의 기본 포트 5432를 호스트와 연결
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data # 데이터 영속성 유지를 위한 볼륨 마운트
+      - ./data/postgres:/var/lib/postgresql/data
   # 2. Redis
   redis:
     image: redis:alpine
@@ -21,8 +20,11 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./data/redis:/data
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
 
+  # 3. Spring Boot
   springboot:
     build: .
     container_name: springboot_compose
@@ -30,16 +32,11 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres # 2. 의존성 업데이트: mysql 대신 postgres
+      - postgres
       - redis
     environment:
-      # 3. Spring Boot 데이터소스 URL 업데이트 (PostgreSQL용 JDBC URL로 변경)
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loopin
       SPRING_DATASOURCE_USERNAME: loopin_user
       SPRING_DATASOURCE_PASSWORD: 1234
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-
-volumes:
-  postgres_data: # 4. 볼륨 이름 업데이트
-  redis_data:

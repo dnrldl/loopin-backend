@@ -32,3 +32,15 @@ bin/
 
 ### 설정 파일 ###
 src/main/resources/application-local.yml
+
+### redis ###
+data/redis/
+*.rdb
+*.aof
+appendonlydir/
+
+### postgres ###
+data/postgres
+*.wal
+*.db
+*.pid
