@@ -25,11 +25,11 @@ public class Comment extends BaseAuditingEntity {
 
     private String content;
 
-    private Integer depth = 0;
+    private Integer depth;
 
-    private Long likeCount = 0L;
-    private Long shareCount = 0L;
-    private Long commentCount = 0L;
+    private Long likeCount;
+    private Long shareCount;
+    private Long commentCount;
 
-    private boolean isDeleted = false;
+    private Boolean isDeleted;
 }

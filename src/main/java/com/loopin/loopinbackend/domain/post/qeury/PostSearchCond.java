@@ -8,8 +8,10 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PostSearchCond {
-    private int page = 0;
-    private int size = 10;
+    @Builder.Default
+    private Integer page = 0;
+    @Builder.Default
+    private Integer size = 10;
     private Long userId;
     private String sortBy;
     private String direction;

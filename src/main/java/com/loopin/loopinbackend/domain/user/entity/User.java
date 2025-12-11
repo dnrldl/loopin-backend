@@ -44,6 +44,7 @@ public class User extends BaseTimeEntity {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Gender gender;
 
     private String profileImageUrl;

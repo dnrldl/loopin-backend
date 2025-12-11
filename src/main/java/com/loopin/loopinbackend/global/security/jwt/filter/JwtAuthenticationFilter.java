@@ -38,11 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             if (redisTemplate.hasKey("blacklist:" + token)) throw new BlacklistTokenException();
-            if (!jwtProvider.isValidToken(token)) {
-
-
-                throw new InvalidJwtException();
-            }
+            if (!jwtProvider.isValidToken(token)) throw new InvalidJwtException();
 
             String email = jwtProvider.extractUsername(token);
             CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);

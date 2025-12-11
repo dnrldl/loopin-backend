@@ -64,7 +64,9 @@ public class SecurityConfig {
                                     .requestMatchers(HttpMethod.POST, "/api/posts").authenticated()
 
                                     // 댓글 조회 허용
-                                    .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll();
+                                    .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
+
+                                    .anyRequest().authenticated();
                         }
                 )
                 .sessionManagement(session -> session

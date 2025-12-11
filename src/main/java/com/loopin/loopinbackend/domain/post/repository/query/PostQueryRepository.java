@@ -14,8 +14,10 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +26,7 @@ import java.util.Optional;
 
 import static com.querydsl.jpa.JPAExpressions.select;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class PostQueryRepository {
@@ -36,7 +39,8 @@ public class PostQueryRepository {
      * @param postId 게시글ID
      * @return 게시글 상세 데이터
      */
-    public PostDetailResponse findPostById(Long postId, Long userId) {
+    public Optional<PostDetailResponse> findPostById(Long postId, Long userId) {
+        log.info("Finding post by id {} for user {}", postId, userId);
         QPost post = QPost.post;
         QUser user = QUser.user;
         QComment comment = QComment.comment;
@@ -52,7 +56,14 @@ public class PostQueryRepository {
                 .fetch();
 
         // 사용자 좋아요 여부
-        BooleanExpression isLiked = userId != null ? postLike.userId.eq(userId) : null;
+//        BooleanExpression isLiked = userId != null ? postLike.userId.eq(userId) : Expressions.asBoolean(false);
+        BooleanExpression isLiked =
+                userId == null ? Expressions.FALSE :
+                        JPAExpressions.selectOne()
+                                .from(postLike)
+                                .where(postLike.postId.eq(post.id)
+                                        .and(postLike.userId.eq(userId)))
+                                .exists();
 
         // where 조건
         BooleanBuilder booleanBuilder = new BooleanBuilder();
@@ -62,7 +73,7 @@ public class PostQueryRepository {
                 .select(new QPostDetailResponse(
                         post.id,
                         post.content,
-                        Expressions.constant(""),
+                        Expressions.constant(""), // thumbnail
                         Expressions.constant(imageUrls),
                         user.nickname,
                         post.depth,
@@ -80,8 +91,7 @@ public class PostQueryRepository {
                 .where(booleanBuilder)
                 .fetchOne();
 
-        return Optional.ofNullable(response)
-                .orElseThrow(PostNotFoundException::new);
+        return Optional.ofNullable(response);
     }
 
 
@@ -133,9 +143,6 @@ public class PostQueryRepository {
             query.leftJoin(postLike)
                     .on(postLike.postId.eq(post.id)
                             .and(postLike.userId.eq(userId)));
-            // 필요시 isLiked 계산 실시간 반영:
-            // .select(...) 내에
-            // new CaseBuilder().when(postLike.id.isNotNull()).then(true).otherwise(false)
         }
 
         return query

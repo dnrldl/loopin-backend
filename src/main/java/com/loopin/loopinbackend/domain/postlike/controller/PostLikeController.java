@@ -1,5 +1,6 @@
 package com.loopin.loopinbackend.domain.postlike.controller;
 
+import com.loopin.loopinbackend.global.security.annotation.AuthUserId;
 import com.loopin.loopinbackend.global.security.util.SecurityUtils;
 import com.loopin.loopinbackend.domain.postlike.service.command.PostLikeService;
 import com.loopin.loopinbackend.global.response.ApiErrorResponse;
@@ -11,10 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @Tag(name = "Post Like", description = "게시글(댓글) 좋아요 API")
 @RestController
 @RequiredArgsConstructor
@@ -32,8 +35,10 @@ public class PostLikeController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     @PostMapping("/{postId}/like")
-    public ResponseEntity<ApiSuccessResponse<Void>> likePost(@PathVariable Long postId) {
-        Long userId = SecurityUtils.getCurrentUser().getId();
+    public ResponseEntity<ApiSuccessResponse<Void>> likePost(
+            @PathVariable Long postId,
+            @AuthUserId Long userId) {
+        log.info("Try Like Post Id: {}", postId);
         postLikeService.like(postId, userId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
